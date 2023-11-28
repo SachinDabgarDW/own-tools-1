@@ -2,7 +2,7 @@ import streamlit as st
 import urllib.parse
 import json
 import requests
-import simplejson as json
+import json
 import sys
 import os
 import pdb
