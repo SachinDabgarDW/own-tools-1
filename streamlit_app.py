@@ -91,6 +91,9 @@ def main():
                 text-align: center;
                 top: 2px;
             }
+            .st-emotion-cache-zq5wmm{
+                display: none;
+            }
             </style>
             """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
