@@ -81,6 +81,16 @@ def main():
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
+            footer:after {
+                content:'Made with ❤️ by Sachin Dabgar'; 
+                visibility: visible;
+                display: block;
+                position: relative;
+                #background-color: red;
+                padding: 5px;
+                text-align: center;
+                top: 2px;
+            }
             </style>
             """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
