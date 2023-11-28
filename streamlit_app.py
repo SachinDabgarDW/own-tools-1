@@ -165,7 +165,8 @@ def main():
                 position: relative;
                 padding: 5px;
                 text-align: center;
-                top: 2px;
+                font-size: 20px;
+                font-weight: 900;
             }
             .st-emotion-cache-zq5wmm{
                 display: none;
