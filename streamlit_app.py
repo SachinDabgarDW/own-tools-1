@@ -105,11 +105,62 @@ def generate_crawl_command(job_id):
 
     return command
 
+
+def generate_proxy_info():
+    proxy_list = []
+    country_dict = {}
+    proxy_url = 'https://redash.dataweave.com/api/queries/415/results.json?api_key=iS3EUyIIjOBkfLFT4ndXvy4kKE7o07GnR40U9c1b'
+    country_provider_url = 'http://api.crawl-modes.dweave.net/workflow/proxy_countries/?proxy_provider='
+
+    resp = requests.get(proxy_url)
+    jresp = eval(resp.content)
+    for each in jresp['query_result']['data']['rows']:
+        proxy_list.append(each.get('proxy_provider'))
+
+    print('total number of proxies found is ' + str(len(proxy_list)) + '\n')
+
+    for each in proxy_list:
+        try:
+            proxy_name = each
+            proxy_resp = requests.get(country_provider_url + proxy_name)
+            if proxy_resp.json().get('data') != []:
+                country_data = proxy_resp.json().get('data')
+                for each in country_data:
+                    country = each.get('country_id')
+                    country_count = each.get('country_count')
+                    if country not in country_dict:
+                        country_dict[country] = {}
+                    if proxy_name in country_dict[country]:
+                        country_dict[country][proxy_name] += country_count
+                    else:
+                        country_dict[country][proxy_name] = country_count
+        except Exception as e:
+            print(e)
+
+    with open('/tmp/country_dict.json', 'w+') as file:
+        json.dump(country_dict, file)
+
+    return country_dict
+
+def get_proxy_info(proxy_country):
+    try:
+        if not os.path.exists('/tmp/country_dict.json'):
+            generate_proxy_info()
+
+        country_dict = json.load(open('/tmp/country_dict.json', 'r'))
+        if proxy_country not in country_dict:
+            return f"Country not found: {proxy_country}"
+
+        proxy_info = country_dict[proxy_country]
+        return json.dumps(proxy_info, indent=2)
+    except Exception as e:
+        return str(e)
+
 def main():
     st.title("Web Tools")
 
     # Sidebar navigation
-    selected_tab = st.sidebar.radio("Navigation", ["Cache URL Generator", "Number Converter", "Crawl Command Generator"])
+    selected_tab = st.sidebar.radio("Navigation", ["Cache URL Generator", "Number Converter", "Crawl Command Generator", "Proxy Info"])
 
     # Section 1: Link Generator
     if selected_tab == "Cache URL Generator":
@@ -151,9 +202,26 @@ def main():
         
         # Add a "Generate Command" button to generate the crawl command
         if job_id_input:
-            crawl_command = generate_crawl_command(job_id_input)
-            st.markdown("**Note:** Make sure to add --url by yourself. :wink:")
-            st.markdown(f"**Crawl Command:** {crawl_command}")
+            with st.spinner("Generating crawl command... Please wait."):
+                crawl_command = generate_crawl_command(job_id_input)
+                st.markdown("**Note:** Make sure to add --url by yourself. :wink:")
+                st.markdown(f"**Crawl Command:**")
+                st.code(crawl_command)
+    
+    # Section 4: Proxy Information
+    elif selected_tab == "Proxy Info":
+        st.header("Proxy Information")
+
+        # Add a text input for entering the proxy country
+        proxy_country_input = st.text_input("Enter Proxy Country:")
+
+        # Add a "Get Proxy Info" button to retrieve proxy information
+        if proxy_country_input:
+            with st.spinner("Generating Proxy Information... Please wait."):
+                proxy_info = get_proxy_info(proxy_country_input)
+
+            st.markdown(f"**Proxy Information for {proxy_country_input}:**")
+            st.code(proxy_info, language="json")
 
     hide_streamlit_style = """
             <style>
