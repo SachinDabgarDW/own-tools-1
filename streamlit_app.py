@@ -142,9 +142,13 @@ def generate_proxy_info():
 
     return country_dict
 
-def get_proxy_info(proxy_country):
+def get_proxy_info(proxy_country, use_proxy_file):
     try:
+
         if not os.path.exists('/tmp/country_dict.json'):
+            generate_proxy_info()
+
+        if  not use_proxy_file:
             generate_proxy_info()
 
         country_dict = json.load(open('/tmp/country_dict.json', 'r'))
@@ -212,13 +216,16 @@ def main():
     elif selected_tab == "Proxy Info":
         st.header("Proxy Information")
 
+        use_proxy_file = st.checkbox("Use Proxy Data from File", True)
+
         # Add a text input for entering the proxy country
         proxy_country_input = st.text_input("Enter Proxy Country:")
 
         # Add a "Get Proxy Info" button to retrieve proxy information
+        
         if proxy_country_input:
             with st.spinner("Generating Proxy Information... Please wait."):
-                proxy_info = get_proxy_info(proxy_country_input)
+                proxy_info = get_proxy_info(proxy_country_input, use_proxy_file)
 
             st.markdown(f"**Proxy Information for {proxy_country_input}:**")
             st.code(proxy_info, language="json")
