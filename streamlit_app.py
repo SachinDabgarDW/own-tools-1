@@ -7,9 +7,10 @@ import sys
 import os
 import pdb
 import gzip
+import base64
 
 def generate_link(json_data):
-    base_url = "http://api.cache.dweave.net/cache/?"
+    base_url = "http://api.cache.dweave.net/cache/?path="
     
     # Customize the parameters based on your JSON structure
     params = {
@@ -19,9 +20,22 @@ def generate_link(json_data):
         "source": json_data["source"],
     }
 
+    dump_files = json_data.get("dump_files")
+    temp = []
+    for file in dump_files:
+        d = {}
+        tag = file.get("tag")
+        path = file.get("path")
+        bytes_data = path.encode('utf-8')
+        base64_encoded = base64.b64encode(bytes_data)
+        encoded_string = base64_encoded.decode('utf-8')
     # Encode the parameters and concatenate them to the base URL
-    link = base_url + urllib.parse.urlencode(params)
-    return link
+        link = base_url + encoded_string
+        d["tag"] = tag
+        d["link"] = link
+        temp.append(d)
+        
+    return temp
 
 def convert_number_format(input_str):
     try:
@@ -180,7 +194,11 @@ def main():
                 # If JSON data is provided, generate and display the link
                 if json_data:
                     link = generate_link(json_data)
-                    st.markdown(f"**Generated Link:** {link}")
+                    for i in link:
+                        tag = i.get("tag")
+                        link = i.get("link")
+                        st.markdown(f"**Tag:** {tag}")
+                        st.markdown(f"**Generated Link:** {link}")
         except json.JSONDecodeError:
             st.error("Invalid JSON format. Please provide valid JSON data.")
             return
@@ -248,7 +266,7 @@ def main():
             }
             </style>
             """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+    # st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
 if __name__ == "__main__":
     main()
